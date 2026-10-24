@@ -48,6 +48,7 @@ input{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8
 <header><h1>汉<span>语</span> Kamus Mandarin</h1><span><button id="devbtn" style="font-size:13px;padding:3px 10px">Development</button> <span id="net">Online</span></span></header>
 
 <div class="card">
+ <div class="bar" style="margin:0 0 8px"><button class="lgb pri" data-l="zh">中文</button><button class="lgb" data-l="ja">日本語</button><button class="lgb" data-l="en">English</button></div>
  <div class="dir"><b id="from">Indonesia</b><button id="swap" title="Tukar arah">⇄</button><b id="to">中文</b></div>
  <textarea id="in" placeholder="Ketik di sini…" aria-label="Teks input"></textarea>
  <div id="inpy"></div>
@@ -220,10 +221,162 @@ const D=[["你好","nǐ hǎo","halo"],["谢谢","xièxie","terima kasih"],["不�
 ["千伏","qiānfú","kilovolt"],["伏特","fútè","volt"],["安培","ānpéi","ampere"],["赫兹","hèzī","hertz"],
 ["千帕","qiānpà","kilopascal"],["兆帕","zhàopà","megapascal"],["转速","zhuànsù","kecepatan putar"],["百分之","bǎifēnzhī","persen"],
 ["小时","xiǎoshí","jam"],["分钟","fēnzhōng","menit"],["秒","miǎo","detik"]];
-let dir='id2zh',store=JSON.parse(localStorage.getItem('kmc')||'{"h":[],"c":{}}');
+const LN={zh:'中文',ja:'日本語',en:'English'},SPL={zh:'zh-CN',ja:'ja-JP',en:'en-US'},API={zh:'zh-CN',ja:'ja',en:'en'},
+PH={zh:'Ketik hanzi, atau ketik pinyin (contoh: nihao)…',ja:'Ketik kana/kanji, atau ketik romaji (contoh: konnichiwa)…',en:'Type English…'};
+const DJ=[
+["こんにちは","こんにちは","halo"],["ありがとう","ありがとう","terima kasih"],["どういたしまして","どういたしまして","sama-sama"],["ごめんなさい","ごめんなさい","maaf"],
+["さようなら","さようなら","sampai jumpa"],["はい","はい","ya"],["いいえ","いいえ","bukan"],["私","わたし","saya"],
+["あなた","あなた","kamu"],["私たち","わたしたち","kita"],["おはようございます","おはようございます","selamat pagi"],["おやすみなさい","おやすみなさい","selamat malam"],
+["いくらですか","いくらですか","berapa harga"],["トイレ","トイレ","toilet"],["水","みず","air"],["仕事","しごと","kerja"],
+["安全","あんぜん","aman"],["温度","おんど","suhu"],["電気","でんき","listrik"],["助ける","たすける","bantu"],
+["わかりません","わかりません","saya tidak mengerti"],["今日","きょう","hari ini"],["明日","あした","besok"],["社長","しゃちょう","bos"],
+["機械","きかい","mesin"],["壊れた","こわれた","rusak"],["フェロニッケル","フェロニッケル","feronikel"],["ラテライトニッケル鉱","ラテライトニッケルこう","bijih nikel laterit"],
+["鉱石","こうせき","bijih"],["冶金","やきん","metalurgi"],["製錬","せいれん","peleburan"],["精錬","せいれん","pemurnian (refining)"],
+["還元","かんげん","reduksi"],["酸化","さんか","oksidasi"],["焙焼","ばいしょう","kalsinasi"],["ロータリーキルン","ロータリーキルン","kiln putar"],
+["電気炉","でんきろ","tungku listrik"],["サブマージドアーク炉","サブマージドアーク炉","tungku busur terendam"],["電極","でんきょく","elektroda"],["電極ペースト","電極ペースト","pasta elektroda"],
+["炉内張り","ろうちばり","lapisan dalam tungku"],["溶融池","ようゆうち","kolam lebur"],["出銑口","しゅっせんこう","tap hole logam"],["出銑","しゅっせん","tapping logam"],
+["出滓","しゅっさい","tapping terak"],["スラグ","スラグ","terak"],["溶銑","ようせん","logam cair"],["溶鋼","ようこう","baja cair"],
+["取鍋","とりべ","ladle baja"],["取鍋精錬炉","とりべせいれんろ","ladle furnace (LF)"],["注湯","ちゅうとう","penuangan cairan logam"],["鋳造","ちゅうぞう","pengecoran"],
+["造粒","ぞうりゅう","granulasi"],["脱硫","だつりゅう","desulfurisasi"],["脱酸","だっさん","deoksidasi"],["合金","ごうきん","paduan logam"],
+["ステンレス鋼","ステンレスこう","baja tahan karat"],["鋼","こう","baja"],["鉄","てつ","besi"],["ニッケル","ニッケル","nikel"],
+["コバルト","コバルト","kobalt"],["クロム","クロム","kromium"],["マンガン","マンガン","mangan"],["マグネシウム","マグネシウム","magnesium"],
+["アルミニウム","アルミニウム","aluminium"],["シリコン","シリコン","silikon"],["炭素","たんそ","karbon"],["硫黄","いおう","sulfur"],
+["リン","リン","fosfor"],["銅","どう","tembaga"],["酸化マグネシウム","酸化マグネシウム","magnesium oksida (MgO)"],["二酸化ケイ素","にさんかけいそ","silika (SiO2)"],
+["石灰","せっかい","kapur"],["塩基度","えんきど","basisitas"],["粘度","ねんど","viskositas"],["融点","ゆうてん","titik leleh"],
+["品位","ひんい","kadar"],["成分","せいぶん","komposisi"],["不純物","ふじゅんぶつ","pengotor"],["還元剤","かんげんざい","reduktor"],
+["石炭","せきたん","batu bara"],["コークス","コークス","kokas"],["バーナー","バーナー","pembakar (burner)"],["排ガス","はいガス","gas buang"],
+["集塵","しゅうじん","pengumpulan debu"],["変圧器","へんあつき","transformator"],["電流","でんりゅう","arus listrik"],["電圧","でんあつ","tegangan"],
+["電力","でんりょく","daya"],["冷却水","れいきゃくすい","air pendingin"],["熱電対","ねつでんつい","termokopel"],["サンプリング","サンプリング","pengambilan sampel"],
+["耐火れんが","たいかれんが","bata tahan api"],["耐火物","たいかぶつ","material refraktori"],["ランミング材","ランミングざい","ramming mass"],["キャスタブル","キャスタブル","castable"],
+["ブレイクアウト","ブレイクアウト","tungku jebol"],["点検","てんけん","pemeriksaan rutin"],["引き継ぎ","ひきつぎ","serah terima shift"],["保全","ほぜん","pemeliharaan"],
+["炉停止","ろていし","menghentikan tungku"],["昇温","しょうおん","menaikkan suhu"],["降温","こうおん","menurunkan suhu"],["高温","こうおん","suhu tinggi"],
+["ヘルメット","ヘルメット","helm pengaman"],["防護服","ぼうごふく","pakaian pelindung"],["手袋","てぶくろ","sarung tangan"],["中毒","ちゅうどく","keracunan"],
+["爆発","ばくはつ","ledakan"],["火災","かさい","kebakaran"],["危険","きけん","bahaya"],["窒素","ちっそ","nitrogen"],
+["酸素","さんそ","oksigen"],["圧縮空気","あっしゅくくうき","udara bertekanan"],["バルブ","バルブ","katup"],["ポンプ","ポンプ","pompa"],
+["潤滑","じゅんかつ","pelumasan"],["モーター","モーター","motor listrik"],["油圧","ゆあつ","hidrolik"],["オペレーター","オペレーター","operator"],
+["生産量","せいさんりょう","jumlah produksi"],["品質","ひんしつ","kualitas"],["回収率","かいしゅうりつ","recovery rate"],["銅鉱石","どうこうせき","bijih tembaga"],
+["黄銅鉱","おうどうこう","kalkopirit"],["銅精鉱","どうせいこう","konsentrat tembaga"],["粗銅","そどう","tembaga blister"],["真鍮","しんちゅう","kuningan"],
+["青銅","せいどう","perunggu"],["自溶製錬","じゆうせいれん","peleburan kilat (flash smelting)"],["転炉","てんろ","konverter"],["電解","でんかい","elektrolisis"],
+["電解採取","でんかいさいしゅ","electrowinning"],["溶媒抽出","ようばいちゅうしゅつ","ekstraksi pelarut"],["浸出","しんしゅつ","pelindian (leaching)"],["硫酸","りゅうさん","asam sulfat"],
+["選鉱","せんこう","pengolahan bijih"],["浮遊選鉱","ふゆうせんこう","flotasi"],["ボールミル","ボールミル","ball mill"],["精鉱","せいこう","konsentrat"],
+["尾鉱","びこう","tailing"],["金","きん","logam emas (Au)"],["金鉱","きんこう","tambang emas"],["金の延べ棒","きんののべぼう","batangan emas"],
+["貴金属","ききんぞく","logam mulia"],["銀","ぎん","perak"],["鉛","なまり","timbal"],["亜鉛","あえん","seng"],
+["錫","すず","timah"],["シアン化","シアンか","sianidasi"],["活性炭","かっせいたん","karbon aktif"],["オンス","オンス","ons troi"],
+["採掘","さいくつ","penambangan"],["鉱山","こうざん","tambang"],["発破","はっぱ","peledakan"],["廃水","はいすい","air limbah"],
+["汚染","おせん","pencemaran"],["耐火度","たいかど","ketahanan api (refractoriness)"],["耐熱衝撃性","たいねつしょうげきせい","ketahanan kejut termal"],["気孔率","きこうりつ","porositas"],
+["焼結","しょうけつ","sintering"],["結合剤","けつごうざい","bahan pengikat"],["樹脂","じゅし","resin"],["ピッチ","ピッチ","ter / aspal"],
+["セメント","セメント","semen"],["骨材","こつざい","agregat"],["マグネシアクリンカー","マグネシアクリンカー","magnesia butiran"],["マグカーボンれんが","マグカーボンれんが","bata magnesia-karbon"],
+["コランダム","コランダム","korundum"],["ボーキサイト","ボーキサイト","bauksit"],["アルミナ","アルミナ","alumina"],["黒鉛","こくえん","grafit"],
+["炭化ケイ素","たんかけいそ","silikon karbida"],["スライディングゲート","スライディングゲート","pelat slide gate"],["ノズル","ノズル","nozel"],["ポーラスプラグ","ポーラスプラグ","porous plug"],
+["築炉","ちくろ","pemasangan bata"],["吹付け補修","ふきつけほしゅう","gunning"],["寿命","じゅみょう","umur pakai"],["検査","けんさ","pengujian"],
+["会社","かいしゃ","perusahaan"],["工場","こうじょう","pabrik"],["マネージャー","マネージャー","manajer"],["購買","こうばい","pengadaan"],
+["サプライヤー","サプライヤー","pemasok"],["顧客","こきゃく","pelanggan"],["注文","ちゅうもん","pesanan"],["見積もり","みつもり","penawaran harga"],
+["価格","かかく","harga"],["契約","けいやく","kontrak"],["請求書","せいきゅうしょ","faktur"],["納期","のうき","waktu pengiriman"],
+["在庫","ざいこ","stok"],["倉庫","そうこ","gudang"],["輸送","ゆそう","pengangkutan"],["コンテナ","コンテナ","kontainer"],
+["支払い","しはらい","pembayaran"],["エンジニア","エンジニア","insinyur"],["現場","げんば","lokasi lapangan"],["施工","せこう","pelaksanaan pekerjaan"],
+["検収","けんしゅう","pemeriksaan serah terima"],["サンプル","サンプル","sampel"],["仕様","しよう","spesifikasi"],["寸法","すんぽう","ukuran"],
+["重量","じゅうりょう","berat"],["数量","すうりょう","jumlah"],["石","いし","batu"],["石灰石","せっかいせき","batu kapur"],
+["大理石","だいりせき","marmer"],["花崗岩","かこうがん","granit"],["玄武岩","げんぶがん","basal"],["砂岩","さがん","batu pasir"],
+["石英","せきえい","kuarsa"],["砂","すな","pasir"],["砕石","さいせき","batu pecah"],["コンクリート","コンクリート","beton"],
+["採石場","さいせきば","tambang batu (quarry)"],["ショベルカー","ショベルカー","ekskavator"],["ダンプカー","ダンプカー","dump truck"],["爆薬","ばくやく","bahan peledak"],
+["硬度","こうど","kekerasan"],["強度","きょうど","kekuatan"],["密度","みつど","massa jenis"],["吸水率","きゅうすいりつ","daya serap air"],
+["カオリン","カオリン","kaolin"],["ベントナイト","ベントナイト","bentonit"],["蛍石","ほたるいし","fluorit"],["生石灰","せいせっかい","kapur tohor"],
+["ミリメートル","ミリメートル","milimeter"],["センチメートル","センチメートル","sentimeter"],["メートル","メートル","meter"],["キロメートル","キロメートル","kilometer"],
+["立方メートル","りっぽうメートル","meter kubik"],["キログラム","キログラム","kilogram"],["グラム","グラム","gram"],["トン","トン","ton"],
+["リットル","リットル","liter"],["キロワット","キロワット","kilowatt"],["メガワット","メガワット","megawatt"],["ボルト","ボルト","volt"],
+["アンペア","アンペア","ampere"],["摂氏度","せっしど","derajat Celsius"],["時間","じかん","jam"],["分","ふん","menit"],
+["秒","びょう","detik"]],DE=[
+["hello","","halo"],["thank you","","terima kasih"],["you're welcome","","sama-sama"],["sorry","","maaf"],
+["goodbye","","sampai jumpa"],["yes","","ya"],["no","","bukan"],["I","","saya"],
+["you","","kamu"],["we","","kita"],["good morning","","selamat pagi"],["good night","","selamat malam"],
+["how much is it","","berapa harga"],["toilet","","toilet"],["water","","air"],["work","","kerja"],
+["safe","","aman"],["temperature","","suhu"],["electricity","","listrik"],["help","","bantu"],
+["I don't understand","","saya tidak mengerti"],["today","","hari ini"],["tomorrow","","besok"],["boss","","bos"],
+["machine","","mesin"],["broken","","rusak"],["ferronickel","","feronikel"],["nickel laterite ore","","bijih nikel laterit"],
+["ore","","bijih"],["metallurgy","","metalurgi"],["smelting","","peleburan"],["refining","","pemurnian (refining)"],
+["reduction","","reduksi"],["oxidation","","oksidasi"],["roasting","","kalsinasi"],["rotary kiln","","kiln putar"],
+["electric furnace","","tungku listrik"],["submerged arc furnace","","tungku busur terendam"],["electrode","","elektroda"],["electrode paste","","pasta elektroda"],
+["furnace lining","","lapisan dalam tungku"],["molten pool","","kolam lebur"],["tap hole","","tap hole logam"],["metal tapping","","tapping logam"],
+["slag tapping","","tapping terak"],["slag","","terak"],["molten iron","","logam cair"],["molten steel","","baja cair"],
+["ladle","","ladle baja"],["ladle furnace","","ladle furnace (LF)"],["pouring","","penuangan cairan logam"],["casting","","pengecoran"],
+["granulation","","granulasi"],["desulfurization","","desulfurisasi"],["deoxidation","","deoksidasi"],["alloy","","paduan logam"],
+["stainless steel","","baja tahan karat"],["steel","","baja"],["iron","","besi"],["nickel","","nikel"],
+["cobalt","","kobalt"],["chromium","","kromium"],["manganese","","mangan"],["magnesium","","magnesium"],
+["aluminum","","aluminium"],["silicon","","silikon"],["carbon","","karbon"],["sulfur","","sulfur"],
+["phosphorus","","fosfor"],["copper","","tembaga"],["magnesium oxide","","magnesium oksida (MgO)"],["silica","","silika (SiO2)"],
+["lime","","kapur"],["basicity","","basisitas"],["viscosity","","viskositas"],["melting point","","titik leleh"],
+["grade","","kadar"],["composition","","komposisi"],["impurities","","pengotor"],["reducing agent","","reduktor"],
+["coal","","batu bara"],["coke","","kokas"],["burner","","pembakar (burner)"],["flue gas","","gas buang"],
+["dust collection","","pengumpulan debu"],["transformer","","transformator"],["current","","arus listrik"],["voltage","","tegangan"],
+["power","","daya"],["cooling water","","air pendingin"],["thermocouple","","termokopel"],["sampling","","pengambilan sampel"],
+["refractory brick","","bata tahan api"],["refractory material","","material refraktori"],["ramming mass","","ramming mass"],["castable","","castable"],
+["breakout","","tungku jebol"],["inspection","","pemeriksaan rutin"],["shift handover","","serah terima shift"],["maintenance","","pemeliharaan"],
+["furnace shutdown","","menghentikan tungku"],["heating up","","menaikkan suhu"],["cooling down","","menurunkan suhu"],["high temperature","","suhu tinggi"],
+["safety helmet","","helm pengaman"],["protective clothing","","pakaian pelindung"],["gloves","","sarung tangan"],["poisoning","","keracunan"],
+["explosion","","ledakan"],["fire","","kebakaran"],["danger","","bahaya"],["nitrogen","","nitrogen"],
+["oxygen","","oksigen"],["compressed air","","udara bertekanan"],["valve","","katup"],["pump","","pompa"],
+["lubrication","","pelumasan"],["motor","","motor listrik"],["hydraulic","","hidrolik"],["operator","","operator"],
+["production volume","","jumlah produksi"],["quality","","kualitas"],["recovery rate","","recovery rate"],["copper ore","","bijih tembaga"],
+["chalcopyrite","","kalkopirit"],["copper concentrate","","konsentrat tembaga"],["blister copper","","tembaga blister"],["brass","","kuningan"],
+["bronze","","perunggu"],["flash smelting","","peleburan kilat (flash smelting)"],["converter","","konverter"],["electrolysis","","elektrolisis"],
+["electrowinning","","electrowinning"],["solvent extraction","","ekstraksi pelarut"],["leaching","","pelindian (leaching)"],["sulfuric acid","","asam sulfat"],
+["mineral processing","","pengolahan bijih"],["flotation","","flotasi"],["ball mill","","ball mill"],["concentrate","","konsentrat"],
+["tailings","","tailing"],["gold","","logam emas (Au)"],["gold mine","","tambang emas"],["gold bar","","batangan emas"],
+["precious metals","","logam mulia"],["silver","","perak"],["lead","","timbal"],["zinc","","seng"],
+["tin","","timah"],["cyanidation","","sianidasi"],["activated carbon","","karbon aktif"],["ounce","","ons troi"],
+["mining","","penambangan"],["mine","","tambang"],["blasting","","peledakan"],["wastewater","","air limbah"],
+["pollution","","pencemaran"],["refractoriness","","ketahanan api (refractoriness)"],["thermal shock resistance","","ketahanan kejut termal"],["porosity","","porositas"],
+["sintering","","sintering"],["binder","","bahan pengikat"],["resin","","resin"],["pitch","","ter / aspal"],
+["cement","","semen"],["aggregate","","agregat"],["magnesia clinker","","magnesia butiran"],["magnesia-carbon brick","","bata magnesia-karbon"],
+["corundum","","korundum"],["bauxite","","bauksit"],["alumina","","alumina"],["graphite","","grafit"],
+["silicon carbide","","silikon karbida"],["slide gate","","pelat slide gate"],["nozzle","","nozel"],["porous plug","","porous plug"],
+["lining construction","","pemasangan bata"],["gunning","","gunning"],["service life","","umur pakai"],["inspection test","","pengujian"],
+["company","","perusahaan"],["factory","","pabrik"],["manager","","manajer"],["procurement","","pengadaan"],
+["supplier","","pemasok"],["customer","","pelanggan"],["order","","pesanan"],["quotation","","penawaran harga"],
+["price","","harga"],["contract","","kontrak"],["invoice","","faktur"],["delivery time","","waktu pengiriman"],
+["inventory","","stok"],["warehouse","","gudang"],["transport","","pengangkutan"],["container","","kontainer"],
+["payment","","pembayaran"],["engineer","","insinyur"],["site","","lokasi lapangan"],["construction work","","pelaksanaan pekerjaan"],
+["acceptance inspection","","pemeriksaan serah terima"],["sample","","sampel"],["specification","","spesifikasi"],["dimension","","ukuran"],
+["weight","","berat"],["quantity","","jumlah"],["stone","","batu"],["limestone","","batu kapur"],
+["marble","","marmer"],["granite","","granit"],["basalt","","basal"],["sandstone","","batu pasir"],
+["quartz","","kuarsa"],["sand","","pasir"],["crushed stone","","batu pecah"],["concrete","","beton"],
+["quarry","","tambang batu (quarry)"],["excavator","","ekskavator"],["dump truck","","dump truck"],["explosive","","bahan peledak"],
+["hardness","","kekerasan"],["strength","","kekuatan"],["density","","massa jenis"],["water absorption","","daya serap air"],
+["kaolin","","kaolin"],["bentonite","","bentonit"],["fluorite","","fluorit"],["quicklime","","kapur tohor"],
+["millimeter","","milimeter"],["centimeter","","sentimeter"],["meter","","meter"],["kilometer","","kilometer"],
+["cubic meter","","meter kubik"],["kilogram","","kilogram"],["gram","","gram"],["ton","","ton"],
+["liter","","liter"],["kilowatt","","kilowatt"],["megawatt","","megawatt"],["volt","","volt"],
+["ampere","","ampere"],["degrees Celsius","","derajat Celsius"],["hour","","jam"],["minute","","menit"],
+["second","","detik"]];
+const DL={zh:D,ja:DJ,en:DE};
+const HB='あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん',HR='a i u e o ka ki ku ke ko sa shi su se so ta chi tsu te to na ni nu ne no ha hi fu he ho ma mi mu me mo ya yu yo ra ri ru re ro wa o n'.split(' ');
+function romaji(s){
+  s=s.replace(/こんにちは/g,'こんにちわ').replace(/こんばんは/g,'こんばんわ').replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-96)).normalize('NFD');
+  const o=[];let sk=false;
+  for(const c of s){
+    if(c==='っ'){sk=true;continue}
+    if(c==='ー'){o.push(o.length?o[o.length-1].slice(-1):'');continue}
+    if(c==='\u3099'||c==='\u309a'){const v=c==='\u3099';let r=o.pop()||'';const db=/^([a-z])\1/.test(r);if(db)r=r.slice(1);r=r.replace(/^sh/,v?'j':'sh').replace(/^ch/,v?'j':'ch').replace(/^ts/,v?'z':'ts').replace(/^fu/,v?'bu':'pu').replace(/^k/,v?'g':'k').replace(/^s/,v?'z':'s').replace(/^t/,v?'d':'t').replace(/^h/,v?'b':'p');o.push(db?r[0]+r:r);continue}
+    if('ゃゅょ'.includes(c)){let r=(o.pop()||'').replace(/i$/,'');const y={'ゃ':'ya','ゅ':'yu','ょ':'yo'}[c];o.push(/^(sh|ch|j)/.test(r)?r+y.slice(1):r+y);continue}
+    const k=HB.indexOf(c);o.push(k>=0?(sk?HR[k][0]+HR[k]:HR[k]):c);sk=false;
+  }
+  return o.join('');
+}
+function rd(t){
+  if(LG==='zh')return hasHan(t)?py(t):'';
+  if(LG==='ja'){const e=DJ.find(x=>x[0]===t);return e?romaji(e[1]):(/^[\u3040-\u30ff]+$/.test(t)?romaji(t):'')}
+  return '';
+}
+async function jaRm(t){try{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&dt=rm&sl=ja&tl=en&q='+encodeURIComponent(t));const d=await r.json();const x=d[0].find(a=>a&&a[3]);return x?x[3]:''}catch(e){return ''}}
+function setLang(l){
+  LG=l;document.querySelectorAll('.lgb').forEach(b=>b.classList.toggle('pri',b.dataset.l===l));
+  $('cand').innerHTML='';$('out').hidden=true;setDir(dir);daily(false);
+}
+document.querySelectorAll('.lgb').forEach(b=>b.onclick=()=>setLang(b.dataset.l));
+let dir='id2f',LG='zh',store=JSON.parse(localStorage.getItem('kmc')||'{"h":[],"c":{}}');
 const save=()=>{try{localStorage.setItem('kmc',JSON.stringify(store))}catch(e){}};
 const flat=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\s']/g,'').toLowerCase();
-const isZh=()=>dir==='zh2id';
+const isZh=()=>dir==='f2id';
 const hasHan=s=>/[\u4e00-\u9fff]/.test(s);
 
 function py(t){
@@ -238,35 +391,35 @@ function updNet(){const n=$('net');n.textContent=navigator.onLine?'Online':'Offl
 addEventListener('online',updNet);addEventListener('offline',updNet);updNet();
 
 function setDir(d){
-  dir=d;$('from').textContent=isZh()?'中文':'Indonesia';$('to').textContent=isZh()?'Indonesia':'中文';
-  $('in').placeholder=isZh()?'Ketik hanzi, atau ketik pinyin (contoh: nihao)…':'Ketik bahasa Indonesia…';
-  $('hwbtn').style.display=isZh()?'':'none';if(!isZh())$('hw').style.display='none';
+  dir=d;$('from').textContent=isZh()?LN[LG]:'Indonesia';$('to').textContent=isZh()?'Indonesia':LN[LG];
+  $('in').placeholder=isZh()?PH[LG]:'Ketik bahasa Indonesia…';
+  $('hwbtn').style.display=isZh()&&LG!=='en'?'':'none';if(!isZh()||LG==='en')$('hw').style.display='none';
   $('cand').innerHTML='';$('inpy').textContent='';
 }
-$('swap').onclick=()=>{const o=$('ozh').textContent&&!isZh()?$('ozh').textContent:'';setDir(isZh()?'id2zh':'zh2id');$('in').value=o;$('out').hidden=true;if(o)onInput()};
+$('swap').onclick=()=>{const o=$('ozh').textContent&&!isZh()?$('ozh').textContent:'';setDir(isZh()?'id2f':'f2id');$('in').value=o;$('out').hidden=true;if(o)onInput()};
 
 /* Input pinyin -> hanzi */
 function chips(list,pick){
   const el=$('cand');el.innerHTML='';
   list.forEach(c=>{const b=document.createElement('button');b.className='chip';
-    const a=document.createElement('b');a.textContent=c;const s=document.createElement('small');s.textContent=py(c);
+    const a=document.createElement('b');a.textContent=c;const s=document.createElement('small');s.textContent=rd(c);
     b.append(a,s);b.onclick=()=>pick(c);el.appendChild(b)});
 }
 let tm;
 function onInput(){
   const v=$('in').value;
-  $('inpy').textContent=isZh()&&hasHan(v)?py(v):'';
+  $('inpy').textContent=isZh()?rd(v):'';
   clearTimeout(tm);
-  if(isZh()&&/^[a-zA-Züv'\s]+$/.test(v.trim())&&v.trim()){
+  if(isZh()&&LG!=='en'&&/^[a-zA-Züv'\s]+$/.test(v.trim())&&v.trim()){
     tm=setTimeout(()=>pyCand(v.trim()),300);
   }else if(!$('hw').style.display||$('hw').style.display==='none')$('cand').innerHTML='';
 }
 async function pyCand(q){
   let list=[];
   if(navigator.onLine){try{
-    const r=await fetch('https://inputtools.google.com/request?itc=zh-t-i0-pinyin&num=8&cp=0&cs=1&ie=utf-8&oe=utf-8&app=demopage&text='+encodeURIComponent(q.replace(/\s/g,'')));
+    const r=await fetch('https://inputtools.google.com/request?itc='+(LG==='ja'?'ja-t-i0-und':'zh-t-i0-pinyin')+'&num=8&cp=0&cs=1&ie=utf-8&oe=utf-8&app=demopage&text='+encodeURIComponent(q.replace(/\s/g,'')));
     const d=await r.json();if(d[0]==='SUCCESS')list=d[1][0][1]}catch(e){}}
-  if(!list.length){const k=flat(q);list=D.filter(e=>flat(e[1]).startsWith(k)).map(e=>e[0]).slice(0,8)}
+  if(!list.length){const k=flat(q);list=DL[LG].filter(e=>flat(LG==='ja'?romaji(e[1]):e[1]).startsWith(k)).map(e=>e[0]).slice(0,8)}
   chips(list,c=>{$('in').value=c;$('cand').innerHTML='';onInput()});
 }
 $('in').addEventListener('input',onInput);
@@ -285,7 +438,7 @@ async function recog(){
   if(!navigator.onLine){$('cand').textContent='Tulis tangan butuh internet.';return}
   try{
     const r=await fetch('https://inputtools.google.com/request?ime=handwriting&app=mobilesearch&cs=1&oe=UTF-8',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({options:'enable_pre_space',requests:[{writing_guide:{writing_area_width:cv.width,writing_area_height:cv.height},ink:strokes,language:'zh_CN'}]})});
+      body:JSON.stringify({options:'enable_pre_space',requests:[{writing_guide:{writing_area_width:cv.width,writing_area_height:cv.height},ink:strokes,language:LG==='ja'?'ja':'zh_CN'}]})});
     const d=await r.json();
     if(d[0]==='SUCCESS')chips(d[1][0][1].slice(0,10),c=>{$('in').value+=c;strokes=[];redraw();$('cand').innerHTML='';onInput()});
   }catch(e){$('cand').textContent='Gagal mengenali tulisan.'}
@@ -296,7 +449,7 @@ $('hwbtn').onclick=()=>{const h=$('hw');h.style.display=h.style.display==='block
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 $('mic').onclick=()=>{
   if(!SR){alert('Browser tidak mendukung input suara. Gunakan Chrome atau Edge.');return}
-  const r=new SR();r.lang=isZh()?'zh-CN':'id-ID';r.interimResults=false;
+  const r=new SR();r.lang=isZh()?SPL[LG]:'id-ID';r.interimResults=false;
   $('mic').textContent='🎤 Mendengarkan…';
   r.onresult=e=>{$('in').value=e.results[0][0].transcript;onInput();translate()};
   r.onerror=e=>{alert('Suara gagal: '+e.error+(e.error==='network'?' (butuh internet)':''))};
@@ -304,8 +457,8 @@ $('mic').onclick=()=>{
   r.start();
 };
 function speak(t,l){if(!t||!window.speechSynthesis)return;const u=new SpeechSynthesisUtterance(t);u.lang=l;u.rate=.85;speechSynthesis.cancel();speechSynthesis.speak(u)}
-$('spkin').onclick=()=>speak($('in').value,isZh()?'zh-CN':'id-ID');
-$('spk').onclick=()=>speak(isZh()?$('oid').textContent:$('ozh').textContent,isZh()?'id-ID':'zh-CN');
+$('spkin').onclick=()=>speak($('in').value,isZh()?SPL[LG]:'id-ID');
+$('spk').onclick=()=>speak(isZh()?$('oid').textContent:$('ozh').textContent,isZh()?'id-ID':SPL[LG]);
 
 /* Translate */
 function chunks(t){const p=t.match(/[^。！？.!?\n]+[。！？.!?\n]*/g)||[t],o=[];let c='';
@@ -317,33 +470,29 @@ async function online(t,sl,tl){
   return out.join(' ');
 }
 function offline(t){
-  const k=t.trim();
-  if(isZh()){
-    let o=[],i=0;
-    while(i<k.length){let m=null;for(const e of D)if(k.startsWith(e[0],i)&&(!m||e[0].length>m[0].length))m=e;
+  const DD=DL[LG],k=t.trim(),f=isZh(),lk=k.toLowerCase().replace(/[.!?。！？]/g,'');
+  if(f&&LG!=='en'){let o=[],i=0;
+    while(i<k.length){let m=null;for(const e of DD)if(k.startsWith(e[0],i)&&(!m||e[0].length>m[0].length))m=e;
       if(m){o.push(m[2]);i+=m[0].length}else{if(/\S/.test(k[i]))o.push(k[i]);i++}}
-    return o.length?o.join(' '):null;
-  }
-  const lk=k.toLowerCase().replace(/[.!?]/g,'');
-  const e=D.find(x=>x[2]===lk);if(e)return e[0];
-  const ws=lk.split(/\s+/),o=[];let i=0;
+    return o.length?o.join(' '):null}
+  const s=f?0:2,d=f?2:0,ws=lk.split(/\s+/),o=[];let i=0;
   while(i<ws.length){let m=null;
-    for(let n=Math.min(4,ws.length-i);n>0;n--){const ph=ws.slice(i,i+n).join(' ');const f=D.find(e=>e[2].toLowerCase()===ph);if(f){m=[f[0],n];break}}
+    for(let n=Math.min(4,ws.length-i);n>0&&!m;n--){const ph=ws.slice(i,i+n).join(' '),e=DD.find(x=>x[s].toLowerCase()===ph);if(e)m=[e[d],n]}
     if(m){o.push(m[0]);i+=m[1]}else if(/^[\d.,]+$/.test(ws[i])){o.push(ws[i]);i++}else return null}
-  return o.join('');
+  return o.join(LG==='en'?' ':'');
 }
-const UN=[['mm','milimeter','毫米'],['cm','sentimeter','厘米'],['km','kilometer','公里'],['µm','mikrometer','微米'],['μm','mikrometer','微米'],['m2','meter persegi','平方米'],['m²','meter persegi','平方米'],['m3','meter kubik','立方米'],['m³','meter kubik','立方米'],['ml','mililiter','毫升'],['kg','kilogram','公斤'],['kw','kilowatt','千瓦'],['mw','megawatt','兆瓦'],['kv','kilovolt','千伏'],['kpa','kilopascal','千帕'],['mpa','megapascal','兆帕'],['hz','hertz','赫兹'],['rpm','putaran per menit','转每分钟'],['°c','derajat celsius','摄氏度'],['℃','derajat celsius','摄氏度'],['ton','ton','吨'],['m','meter','米'],['g','gram','克'],['t','ton','吨'],['l','liter','升'],['v','volt','伏特'],['a','ampere','安培'],['%','persen','%']];
+const UN=[["mm","milimeter","毫米","ミリメートル","millimeter"],["cm","sentimeter","厘米","センチメートル","centimeter"],["km","kilometer","公里","キロメートル","kilometer"],["µm","mikrometer","微米","マイクロメートル","micrometer"],["μm","mikrometer","微米","マイクロメートル","micrometer"],["m2","meter persegi","平方米","平方メートル","square meter"],["m²","meter persegi","平方米","平方メートル","square meter"],["m3","meter kubik","立方米","立方メートル","cubic meter"],["m³","meter kubik","立方米","立方メートル","cubic meter"],["ml","mililiter","毫升","ミリリットル","milliliter"],["kg","kilogram","公斤","キログラム","kilogram"],["kw","kilowatt","千瓦","キロワット","kilowatt"],["mw","megawatt","兆瓦","メガワット","megawatt"],["kv","kilovolt","千伏","キロボルト","kilovolt"],["kpa","kilopascal","千帕","キロパスカル","kilopascal"],["mpa","megapascal","兆帕","メガパスカル","megapascal"],["hz","hertz","赫兹","ヘルツ","hertz"],["rpm","putaran per menit","转每分钟","毎分回転数","rpm"],["°c","derajat celsius","摄氏度","摂氏度","degrees Celsius"],["℃","derajat celsius","摄氏度","摂氏度","degrees Celsius"],["ton","ton","吨","トン","ton"],["t","ton","吨","トン","ton"],["m","meter","米","メートル","meter"],["g","gram","克","グラム","gram"],["l","liter","升","リットル","liter"],["v","volt","伏特","ボルト","volt"],["a","ampere","安培","アンペア","ampere"],["%","persen","%","%","percent"]];
 const UR=new RegExp('(\\d(?:[.,]\\d+)?)\\s*('+UN.map(u=>u[0].replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).sort((a,b)=>b.length-a.length).join('|')+')(?![a-zA-Z0-9²³])','gi');
-function expandUnits(t){const zh=isZh();return t.replace(UR,(m,n,u)=>{const e=UN.find(x=>x[0]===u.toLowerCase());if(!e)return m;if(e[0]==='%'&&zh)return n+'%';return zh?n+e[2]:n+' '+e[1]})}
+function expandUnits(t){const zh=isZh();return t.replace(UR,(m,n,u)=>{const e=UN.find(x=>x[0]===u.toLowerCase());if(!e)return m;if(!zh)return n+' '+e[1];if(LG==='en')return n+' '+e[4];if(e[0]==='%')return n+'%';return n+e[LG==='ja'?3:2]})}
 async function translate(){
   const t=expandUnits($('in').value.trim());if(!t)return;
-  const key=dir+'|'+t;let res=store.c[key],src=res?'Dari riwayat (offline)':'';
-  if(!res&&navigator.onLine){try{res=await online(t,isZh()?'zh-CN':'id',isZh()?'id':'zh-CN');src='Online'}catch(e){}}
+  const key=LG+':'+dir+'|'+t;let res=store.c[key],src=res?'Dari riwayat (offline)':'';
+  if(!res&&navigator.onLine){try{res=await online(t,isZh()?API[LG]:'id',isZh()?'id':API[LG]);src='Online'}catch(e){}}
   if(!res){res=offline(t);if(res)src='Kamus mini offline (kasar, kata per kata)'}
   $('out').hidden=false;
   if(!res){$('ozh').textContent='';$('opy').textContent='';$('oid').textContent='Tidak ditemukan. Sambungkan internet untuk menerjemahkan kalimat ini.';$('src').textContent='';return}
-  if(isZh()){$('ozh').textContent=t;$('opy').textContent=py(t);$('oid').textContent=res}
-  else{$('ozh').textContent=res;$('opy').textContent=py(res);$('oid').textContent=t}
+  const fx=isZh()?t:res;$('ozh').textContent=fx;$('oid').textContent=isZh()?res:t;$('opy').textContent=rd(fx);
+  if(LG==='ja'&&navigator.onLine)jaRm(fx).then(r=>{if(r)$('opy').textContent=r});
   $('src').textContent=src;
   if(src==='Online'||src.startsWith('Dari')){store.c[key]=res;store.h=store.h.filter(h=>h.k!==key);store.h.unshift({k:key,a:t,b:res});store.h=store.h.slice(0,50);
     const ks=Object.keys(store.c);if(ks.length>200)delete store.c[ks[0]];save();hist()}
@@ -353,7 +502,7 @@ function hist(){
   if(!store.h.length){el.textContent='Belum ada.';return}
   store.h.forEach(h=>{const d=document.createElement('div');d.className='hi';
     const a=document.createElement('span'),b=document.createElement('span');a.textContent=h.a;b.textContent=h.b;d.append(a,b);
-    d.onclick=()=>{setDir(h.k.split('|')[0]);$('in').value=h.a;onInput();translate()};el.appendChild(d)});
+    d.onclick=()=>{const p=h.k.split('|')[0].split(':'),dd=p[p.length-1];setLang(p.length>1?p[0]:'zh');setDir(dd==='f2id'||dd==='zh2id'?'f2id':'id2f');$('in').value=h.a;onInput();translate()};el.appendChild(d)});
 }
 $('go').onclick=translate;
 $('in').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey))translate()});
@@ -404,21 +553,21 @@ $('aadd').onclick=async()=>{const z=$('az').value.trim(),i=$('ai').value.trim().
 $('dexp').onclick=async()=>{const u=await DB.get(),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(u.map(e=>({zh:e[0],py:e[1],id:e[2]})),null,2)],{type:'application/json'}));a.download='kamus-saya.json';a.click()};
 
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
-function pick5(){const a=D.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a.slice(0,5)}
+function pick5(){const a=DL[LG].slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a.slice(0,5)}
 function renderWords(w){
   const el=$('dwords');el.innerHTML='';
   w.forEach(e=>{const r=document.createElement('div');r.className='w';
     const z=document.createElement('div');z.className='z';z.textContent=e[0];
-    const m=document.createElement('div');m.className='m';const s=document.createElement('small');s.textContent=e[1]||py(e[0]);m.append(s,document.createTextNode(e[2]));
-    const b=document.createElement('button');b.textContent='🔊';b.title='Dengarkan';b.onclick=()=>speak(e[0],'zh-CN');
+    const m=document.createElement('div');m.className='m';const s=document.createElement('small');s.textContent=LG==='ja'?e[1]+' · '+romaji(e[1]):(e[1]||(LG==='zh'?py(e[0]):''));m.append(s,document.createTextNode(e[2]));
+    const b=document.createElement('button');b.textContent='🔊';b.title='Dengarkan';b.onclick=()=>speak(e[0],SPL[LG]);
     r.append(z,m,b);el.appendChild(r)});
 }
 function daily(force){
-  let s=null;try{s=JSON.parse(localStorage.getItem('kmcDaily'))}catch(e){}
+  let s=null;try{s=JSON.parse(localStorage.getItem('kmcDaily'+LG))}catch(e){}
   let w=!force&&s&&s.d===today()?s.w:null;
-  if(!w){w=pick5();try{localStorage.setItem('kmcDaily',JSON.stringify({d:today(),w}))}catch(e){}}
+  if(!w){w=pick5();try{localStorage.setItem('kmcDaily'+LG,JSON.stringify({d:today(),w}))}catch(e){}}
   renderWords(w);
 }
 $('dnew').onclick=()=>daily(true);
-setDir('id2zh');hist();loadDict().then(()=>daily(false));
+setDir('id2f');hist();loadDict().then(()=>daily(false));
 </script></body></html>
