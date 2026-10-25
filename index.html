@@ -65,7 +65,7 @@ input{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8
 body{padding-bottom:84px}
 main{max-width:1000px;display:grid;gap:12px}main>*{grid-column:1/-1;margin:0}
 @media(min-width:860px){main>.half{grid-column:auto}main{grid-template-columns:1fr 1fr}}
-[data-tab]{display:none}
+[data-tab]:not(body){display:none}
 body[data-tab=tr] [data-tab=tr],body[data-tab=daily] [data-tab=daily],body[data-tab=learn] [data-tab=learn],body[data-tab=dev] [data-tab=dev]{display:block}
 [hidden]{display:none!important}
 .hd{position:sticky;top:0;z-index:6;background:var(--bg);padding:6px 0;display:flex;flex-direction:column;gap:8px;margin:0}
