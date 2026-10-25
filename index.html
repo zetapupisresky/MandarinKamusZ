@@ -133,6 +133,9 @@ body[data-tab=tr] [data-tab=tr],body[data-tab=daily] [data-tab=daily],body[data-
 <nav class="nav"><button data-t="tr"><b>🔤</b>Terjemah</button><button data-t="daily"><b>📅</b>Kata hari ini</button><button data-t="learn"><b>🎓</b>Belajar</button></nav>
 </main>
 <script>
+const LS=(()=>{const m={};let ok=true;try{localStorage.setItem('_t','1');localStorage.removeItem('_t')}catch(e){ok=false}
+return{getItem:k=>ok?localStorage.getItem(k):(k in m?m[k]:null),setItem:(k,v)=>{if(ok)localStorage.setItem(k,v);else m[k]=String(v)}}})();
+const MEM={};
 const $=id=>document.getElementById(id);
 const D=[
 ["你好","nǐ hǎo","halo","p","👋"],["谢谢","xièxie","terima kasih","p","🙏"],["不客气","bú kèqi","sama-sama","p","😊"],["对不起","duìbuqǐ","maaf","p","🙇"],
@@ -838,7 +841,7 @@ const DL={zh:D,ja:DJ,en:DE};
 const KY=()=>LG==='zh'?'dict':'dict_'+LG;
 const dfl=x=>LG==='zh'?py(x):(LG==='ja'&&/^[\u3040-\u30ff]+$/.test(x)?x:'');
 const SAMPLE={zh:[{zh:"你好",py:"nǐ hǎo",id:"halo"},{zh:"熔炼",py:"róngliàn",id:"peleburan"},{zh:"镍",id:"nikel"}],ja:[{term:"溶接",reading:"ようせつ",id:"pengelasan"},{term:"鉄",reading:"てつ",id:"besi"}],en:[{term:"furnace",id:"tungku"},{term:"slag",id:"terak"}]};
-let KID=false;try{KID=localStorage.getItem('kmcKid')==='1'}catch(e){}
+let KID=false;try{KID=LS.getItem('kmcKid')==='1'}catch(e){}
 const HB='あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん',HR='a i u e o ka ki ku ke ko sa shi su se so ta chi tsu te to na ni nu ne no ha hi fu he ho ma mi mu me mo ya yu yo ra ri ru re ro wa o n'.split(' ');
 function romaji(s){
   s=s.replace(/こんにちは/g,'こんにちわ').replace(/こんばんは/g,'こんばんわ').replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-96)).normalize('NFD');
@@ -863,8 +866,8 @@ function setLang(l){
   $('cand').innerHTML='';$('out').hidden=true;setDir(dir);daily(false);if(dev)loadDict();renderCats();$('tn').hidden=LG!=='zh';$('tone').hidden=true;
 }
 document.querySelectorAll('.lgb').forEach(b=>b.onclick=()=>setLang(b.dataset.l));
-let dir='id2f',LG='zh',store=JSON.parse(localStorage.getItem('kmc')||'{"h":[],"c":{}}');
-const save=()=>{try{localStorage.setItem('kmc',JSON.stringify(store))}catch(e){}};
+let dir='id2f',LG='zh',store=JSON.parse(LS.getItem('kmc')||'{"h":[],"c":{}}');
+const save=()=>{try{LS.setItem('kmc',JSON.stringify(store))}catch(e){}};
 const flat=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\s']/g,'').toLowerCase();
 const isZh=()=>dir==='f2id';
 const hasHan=s=>/[\u4e00-\u9fff]/.test(s);
@@ -1001,8 +1004,8 @@ $('cp').onclick=()=>navigator.clipboard&&navigator.clipboard.writeText(isZh()?$(
 $('hclr').onclick=()=>{store={h:[],c:{}};save();hist()};
 
 const DB={open(){return new Promise((ok,no)=>{const r=indexedDB.open('kmc',1);r.onupgradeneeded=()=>r.result.createObjectStore('k');r.onsuccess=()=>ok(r.result);r.onerror=no})},
-async get(k=KY()){try{const db=await this.open();return await new Promise(ok=>{const q=db.transaction('k').objectStore('k').get(k);q.onsuccess=()=>ok(q.result||[]);q.onerror=()=>ok([])})}catch(e){return[]}},
-async set(v,k=KY()){const db=await this.open();return new Promise((ok,no)=>{const t=db.transaction('k','readwrite');t.objectStore('k').put(v,k);t.oncomplete=ok;t.onerror=no})}};
+async get(k=KY()){try{const db=await this.open();return await new Promise(ok=>{const q=db.transaction('k').objectStore('k').get(k);q.onsuccess=()=>ok(q.result||[]);q.onerror=()=>ok([])})}catch(e){return MEM[k]||[]}},
+async set(v,k=KY()){try{const db=await this.open();return await new Promise((ok,no)=>{const t=db.transaction('k','readwrite');t.objectStore('k').put(v,k);t.oncomplete=ok;t.onerror=no})}catch(e){MEM[k]=v}}};
 const BASEL={zh:D.length,ja:DJ.length,en:DE.length};
 async function loadDict(){for(const l of['zh','ja','en']){const u=await DB.get(l==='zh'?'dict':'dict_'+l);DL[l].length=BASEL[l];u.forEach(e=>DL[l].push(e))}
   const n=(await DB.get()).length;$('dcount').textContent=LN[LG]+': '+(n?n+' entri tambahan aktif (total '+DL[LG].length+').':'belum ada kamus tambahan (kamus bawaan: '+BASEL[LG]+' entri).');if(dev)renderList()}
@@ -1055,14 +1058,14 @@ function renderWords(w){
     r.onclick=()=>{r.classList.remove('pop');void r.offsetWidth;r.classList.add('pop');speak(e[0],SPL[LG])};el.appendChild(r)});
 }
 function daily(force){
-  let s=null;try{s=JSON.parse(localStorage.getItem('kmcDaily'+LG+(KID?'k':'')))}catch(e){}
+  let s=null;try{s=JSON.parse(LS.getItem('kmcDaily'+LG+(KID?'k':'')))}catch(e){}
   let w=!force&&s&&s.d===today()?s.w:null;
-  if(!w){w=pick5();try{localStorage.setItem('kmcDaily'+LG+(KID?'k':''),JSON.stringify({d:today(),w}))}catch(e){}}
+  if(!w){w=pick5();try{LS.setItem('kmcDaily'+LG+(KID?'k':''),JSON.stringify({d:today(),w}))}catch(e){}}
   renderWords(w);
 }
 $('dnew').onclick=()=>daily(true);
 const kb=()=>{$('kid').classList.toggle('pri',KID);document.body.classList.toggle('kidmode',KID);$('kid').textContent=KID?'🧒 Mode Anak: Aktif':'🧒 Mode Anak'};
-$('kid').onclick=()=>{KID=!KID;try{localStorage.setItem('kmcKid',KID?'1':'0')}catch(e){}kb();daily(false);renderCats()};kb();
+$('kid').onclick=()=>{KID=!KID;try{LS.setItem('kmcKid',KID?'1':'0')}catch(e){}kb();daily(false);renderCats()};kb();
 const CK={p:['Percakapan sehari-hari','💬'],h:['Nama hewan','🐾'],f:['Nama buah','🍎'],v:['Kendaraan','🚗'],t:['Nama tempat','📍'],w:['Hari, waktu & cuaca','🌤️'],c:['Warna','🎨'],n:['Angka','🔢'],b:['Anggota tubuh','🖐️'],k:['Keluarga','👨‍👩‍👧'],m:['Makanan & minuman','🍜'],s:['Sekolah','🎒'],a:['Kegiatan & sifat','🏃'],x:['Cuaca & alam','⛅'],d:['Arah, posisi & kompas','🧭']};
 const CI={N:['Peleburan nikel (RKEF)','🏭'],L:['Listrik & utilitas','⚡'],K:['Keselamatan kerja (K3)','🦺'],C:['Tembaga','🟠'],G:['Emas & pertambangan','⛏️'],R:['Refractory','🧱'],B:['Batu & agregat','🪨'],U:['Perusahaan & umum','🏢'],S:['Satuan & ukuran','📏'],W:['Kata kerja & istilah di tempat kerja','🧰']};
 const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
@@ -1119,11 +1122,11 @@ function quiz(){
 }
 $('qz').onclick=quiz;
 const root=document.documentElement;let TH={h:168,m:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'};
-try{Object.assign(TH,JSON.parse(localStorage.getItem('kmcTheme')||'{}'))}catch(e){}
-function applyTh(){root.dataset.mode=TH.m;root.style.setProperty('--h',TH.h);$('thm').value=TH.h;$('mode').textContent=TH.m==='dark'?'☀️':'🌙';try{localStorage.setItem('kmcTheme',JSON.stringify(TH))}catch(e){}}
+try{Object.assign(TH,JSON.parse(LS.getItem('kmcTheme')||'{}'))}catch(e){}
+function applyTh(){root.dataset.mode=TH.m;root.style.setProperty('--h',TH.h);$('thm').value=TH.h;$('mode').textContent=TH.m==='dark'?'☀️':'🌙';try{LS.setItem('kmcTheme',JSON.stringify(TH))}catch(e){}}
 $('thm').onchange=()=>{TH.h=$('thm').value;applyTh()};$('mode').onclick=()=>{TH.m=TH.m==='dark'?'light':'dark';applyTh()};applyTh();
-function showTab(t){document.body.dataset.tab=t;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));if(t!=='dev')try{localStorage.setItem('kmcTab',t)}catch(e){}window.scrollTo(0,0)}
+function showTab(t){document.body.dataset.tab=t;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));if(t!=='dev')try{LS.setItem('kmcTab',t)}catch(e){}window.scrollTo(0,0)}
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.t));
-{let t='tr';try{t=localStorage.getItem('kmcTab')||'tr'}catch(e){}showTab(['tr','daily','learn'].includes(t)?t:'tr')}
+{let t='tr';try{t=LS.getItem('kmcTab')||'tr'}catch(e){}showTab(['tr','daily','learn'].includes(t)?t:'tr')}
 setDir('id2f');hist();loadDict().then(()=>{daily(false);renderCats()});
 </script></body></html>
